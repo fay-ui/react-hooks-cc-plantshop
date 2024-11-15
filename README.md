@@ -25,6 +25,7 @@ find the [Core Deliverables](#Core-Deliverables) section.
 Make sure to open [http://localhost:6001/plants](http://localhost:6001/plants)
 in the browser to verify that your backend is working before you proceed!
 
+
 ## Endpoints
 
 The base URL for your backend is: `http://localhost:6001`

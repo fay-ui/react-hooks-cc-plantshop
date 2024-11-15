@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import PlantCard from "./PlantCard";
 
@@ -6,8 +5,9 @@ function PlantList() {
   const [plants, setPlants] = useState([]);
   const [newPlant, setNewPlant] = useState({ name: "", price: "", image: "" });
   const [updatedPlant, setUpdatedPlant] = useState({ id: null, name: "", price: "" });
+  const [searchTerm, setSearchTerm] = useState(""); // Added state for search term
 
-  
+  // Fetching plants from the API
   useEffect(() => {
     fetch("http://localhost:6001/plants")
       .then((res) => res.json())
@@ -15,11 +15,11 @@ function PlantList() {
       .catch(console.error);
   }, []);
 
-
+  // Handle adding a new plant
   const handleAddPlant = (e) => {
     e.preventDefault();
     if (!newPlant.image) {
-      setNewPlant({ ...newPlant, image: "https://via.placeholder.com/150" }); 
+      setNewPlant({ ...newPlant, image: "https://via.placeholder.com/150" });
     }
     fetch("http://localhost:6001/plants", {
       method: "POST",
@@ -43,7 +43,9 @@ function PlantList() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setPlants((prev) => prev.map((p) => (p.id === id ? { ...p, ...data } : p)));
+        setPlants((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, ...data } : p))
+        );
         setUpdatedPlant({ id: null, name: "", price: "" });
       })
       .catch(console.error);
@@ -56,12 +58,12 @@ function PlantList() {
       .catch(console.error);
   };
 
-  
+  // Handle marking a plant as sold
   const handleMarkAsSold = (id) => {
     fetch(`http://localhost:6001/plants/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sold: true }), 
+      body: JSON.stringify({ sold: true }),
     })
       .then((res) => res.json())
       .then((updatedPlant) => {
@@ -71,10 +73,17 @@ function PlantList() {
       })
       .catch(console.error);
   };
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  
+  const filteredPlants = plants.filter((plant) =>
+    plant.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+  );
 
   return (
     <div className="plant-list">
-      
       <form onSubmit={handleAddPlant}>
         <h3>Add a New Plant</h3>
         <input
@@ -98,17 +107,24 @@ function PlantList() {
         <button type="submit">Add Plant</button>
       </form>
 
-      
+      {/* Search input */}
+      <div className="search">
+        <input
+          type="text"
+          placeholder="Search Plants"
+          value={searchTerm}
+          onChange={handleSearchChange} // Update search term as the user types
+        />
+      </div>
+
+      {/* Display filtered plants */}
       <div className="plant-cards">
-        {plants.map((plant) => (
+        {filteredPlants.map((plant) => (
           <PlantCard key={plant.id} plant={plant}>
-            
             {!plant.sold && (
               <button onClick={() => handleMarkAsSold(plant.id)}>Mark as Sold</button>
             )}
-            
             <button onClick={() => handleDeletePlant(plant.id)}>Delete</button>
-            
             <button onClick={() => setUpdatedPlant({ id: plant.id, name: plant.name, price: plant.price })}>
               Edit
             </button>
