@@ -5,38 +5,39 @@ function PlantList() {
   const [plants, setPlants] = useState([]);
   const [newPlant, setNewPlant] = useState({ name: "", price: "", image: "" });
   const [updatedPlant, setUpdatedPlant] = useState({ id: null, name: "", price: "" });
-  const [searchTerm, setSearchTerm] = useState(""); // Added state for search term
+  const [searchTerm, setSearchTerm] = useState(""); 
 
-  // Fetching plants from the API
+  // Fetch the plants data when the component mounts
   useEffect(() => {
-    fetch("http://localhost:6001/plants")
+    fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants") // Corrected the endpoint
       .then((res) => res.json())
       .then(setPlants)
-      .catch(console.error);
+      .catch(console.error); // Added error handling for debugging
   }, []);
 
-  // Handle adding a new plant
+  // Add a new plant
   const handleAddPlant = (e) => {
     e.preventDefault();
     if (!newPlant.image) {
       setNewPlant({ ...newPlant, image: "https://via.placeholder.com/150" });
     }
-    fetch("http://localhost:6001/plants", {
+    fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants", { // Corrected endpoint
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newPlant),
     })
       .then((res) => res.json())
       .then((data) => {
-        setPlants((prev) => [...prev, data]);
+        setPlants((prev) => [...prev, data]); 
         setNewPlant({ name: "", price: "", image: "" });
       })
-      .catch(console.error);
+      .catch(console.error); 
   };
 
-  
+ 
   const handleUpdatePlant = (id) => {
-    fetch(`http://localhost:6001/plants/${id}`, {
+    if (!updatedPlant.name || !updatedPlant.price) return; 
+    fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, { 
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedPlant),
@@ -46,21 +47,23 @@ function PlantList() {
         setPlants((prev) =>
           prev.map((p) => (p.id === id ? { ...p, ...data } : p))
         );
-        setUpdatedPlant({ id: null, name: "", price: "" });
+        setUpdatedPlant({ id: null, name: "", price: "" }); 
       })
       .catch(console.error);
   };
 
-  
+
   const handleDeletePlant = (id) => {
-    fetch(`http://localhost:6001/plants/${id}`, { method: "DELETE" })
+    fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, { 
+      method: "DELETE",
+    })
       .then(() => setPlants((prev) => prev.filter((p) => p.id !== id)))
-      .catch(console.error);
+      .catch(console.error); 
   };
 
-  // Handle marking a plant as sold
+  
   const handleMarkAsSold = (id) => {
-    fetch(`http://localhost:6001/plants/${id}`, {
+    fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, { 
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sold: true }),
@@ -71,19 +74,20 @@ function PlantList() {
           prev.map((plant) => (plant.id === id ? { ...plant, sold: true } : plant))
         );
       })
-      .catch(console.error);
+      .catch(console.error); 
   };
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  
   const filteredPlants = plants.filter((plant) =>
-    plant.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+    plant.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="plant-list">
+     
       <form onSubmit={handleAddPlant}>
         <h3>Add a New Plant</h3>
         <input
@@ -107,27 +111,51 @@ function PlantList() {
         <button type="submit">Add Plant</button>
       </form>
 
-      {/* Search input */}
       <div className="search">
         <input
           type="text"
           placeholder="Search Plants"
           value={searchTerm}
-          onChange={handleSearchChange} // Update search term as the user types
+          onChange={handleSearchChange}
         />
       </div>
 
-      {/* Display filtered plants */}
       <div className="plant-cards">
         {filteredPlants.map((plant) => (
           <PlantCard key={plant.id} plant={plant}>
+     
             {!plant.sold && (
               <button onClick={() => handleMarkAsSold(plant.id)}>Mark as Sold</button>
             )}
             <button onClick={() => handleDeletePlant(plant.id)}>Delete</button>
-            <button onClick={() => setUpdatedPlant({ id: plant.id, name: plant.name, price: plant.price })}>
+            <button
+              onClick={() => setUpdatedPlant({ id: plant.id, name: plant.name, price: plant.price })}
+            >
               Edit
             </button>
+           
+            {updatedPlant.id === plant.id && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleUpdatePlant(plant.id);
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={updatedPlant.name}
+                  onChange={(e) => setUpdatedPlant({ ...updatedPlant, name: e.target.value })}
+                />
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={updatedPlant.price}
+                  onChange={(e) => setUpdatedPlant({ ...updatedPlant, price: e.target.value })}
+                />
+                <button type="submit">Update</button>
+              </form>
+            )}
           </PlantCard>
         ))}
       </div>
