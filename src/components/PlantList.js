@@ -2,21 +2,37 @@ import React, { useState, useEffect } from "react";
 import PlantCard from "./PlantCard";
 
 function PlantList() {
-  const [plants, setPlants] = useState([]);
+  const [plants, setPlants] = useState([]); // Ensure plants is always an array
   const [newPlant, setNewPlant] = useState({ name: "", price: "", image: "" });
   const [updatedPlant, setUpdatedPlant] = useState({ id: null, name: "", price: "" });
   const [searchTerm, setSearchTerm] = useState(""); 
   const [isLoading, setIsLoading] = useState(true);  // For loading state
+  const [error, setError] = useState(null);  // For error handling
 
   // Fetch the plants data when the component mounts
   useEffect(() => {
     fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch plants');
+        }
+        return res.json();
+      })
       .then((data) => {
-        setPlants(data);
+        // Ensure the data is an array
+        if (Array.isArray(data)) {
+          setPlants(data);
+        } else {
+          console.error("Fetched data is not an array:", data);
+          setPlants([]); // If not an array, set plants to an empty array
+        }
         setIsLoading(false);  // Stop loading once the data is fetched
       })
-      .catch(console.error); 
+      .catch((err) => {
+        setError(err.message);  // Set error message to display
+        setIsLoading(false);
+        setPlants([]); // Set to empty array in case of error
+      });
   }, []);
 
   // Add a new plant with validation
@@ -24,32 +40,45 @@ function PlantList() {
     e.preventDefault();
 
     // Input validation
-    if (!newPlant.name || !newPlant.price || !newPlant.image) {
-      alert("All fields are required.");
+    if (!newPlant.name || !newPlant.price) {
+      alert("Name and Price are required.");
       return;
     }
 
-    if (!newPlant.image) {
-      setNewPlant({ ...newPlant, image: "https://via.placeholder.com/150" });
+    if (isNaN(newPlant.price)) {
+      alert("Price must be a valid number.");
+      return;
     }
+
+    // Ensure image URL is set, default to placeholder if not provided
+    const plantWithImage = {
+      ...newPlant,
+      image: newPlant.image || "https://via.placeholder.com/150", // Default image if not provided
+    };
 
     fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newPlant),
+      body: JSON.stringify(plantWithImage),
     })
       .then((res) => res.json())
       .then((data) => {
-        setPlants((prev) => [...prev, data]); 
-        setNewPlant({ name: "", price: "", image: "" });
+        setPlants((prev) => [...prev, data]); // Add the new plant to the state
+        setNewPlant({ name: "", price: "", image: "" }); // Reset the form after submission
       })
-      .catch(console.error); 
+      .catch((err) => {
+        setError("Error adding plant: " + err.message);
+        console.error("Error adding plant:", err);
+      });
   };
 
   // Update plant details
   const handleUpdatePlant = (id) => {
-    if (!updatedPlant.name || !updatedPlant.price) return; 
-    
+    if (!updatedPlant.name || !updatedPlant.price) {
+      alert("Please fill out all fields to update the plant.");
+      return;
+    }
+
     fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -60,7 +89,7 @@ function PlantList() {
         setPlants((prev) =>
           prev.map((p) => (p.id === id ? { ...p, ...data } : p))
         );
-        setUpdatedPlant({ id: null, name: "", price: "" });
+        setUpdatedPlant({ id: null, name: "", price: "" });  // Clear the update form
       })
       .catch(console.error);
   };
@@ -70,7 +99,7 @@ function PlantList() {
     fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, {
       method: "DELETE",
     })
-      .then(() => setPlants((prev) => prev.filter((p) => p.id !== id)))
+      .then(() => setPlants((prev) => prev.filter((p) => p.id !== id))) // Remove from local state
       .catch(console.error); 
   };
 
@@ -95,12 +124,18 @@ function PlantList() {
     setSearchTerm(e.target.value);
   };
 
-  const filteredPlants = plants.filter((plant) =>
-    plant.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter plants by search term
+  const filteredPlants = Array.isArray(plants) 
+    ? plants.filter((plant) =>
+        plant.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="plant-list">
+      {/* Error Message */}
+      {error && <p className="error">{error}</p>}
+
       {/* Add New Plant Form */}
       <form onSubmit={handleAddPlant}>
         <h3>Add a New Plant</h3>
