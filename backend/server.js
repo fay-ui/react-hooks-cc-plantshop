@@ -6,7 +6,7 @@ const server = jsonServer.create();
 const router = jsonServer.router('db.json');
 const middlewares = jsonServer.defaults();
 
-// Serve static files from the "public" folder using Express
+// Serve static files (images) from the "public" folder using Express
 server.use(express.static(path.join(__dirname, 'public'))); // <-- Updated line
 
 // Apply default middlewares (logger, static, cors, and no-cache)
