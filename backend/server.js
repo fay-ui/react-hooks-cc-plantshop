@@ -21,5 +21,6 @@ server.use(router);
 
 // Start the server on port 6001 (or the port specified in the environment variable)
 server.listen(process.env.PORT || 6001, () => {
+  
   console.log('JSON Server is running');
 });

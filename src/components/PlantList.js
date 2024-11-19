@@ -6,10 +6,10 @@ function PlantList() {
   const [newPlant, setNewPlant] = useState({ name: "", price: "", image: "" });
   const [updatedPlant, setUpdatedPlant] = useState({ id: null, name: "", price: "" });
   const [searchTerm, setSearchTerm] = useState(""); 
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [isLoading, setIsLoading] = useState(true); 
+  const [error, setError] = useState(null); 
 
-  // Fetch plants data from the API
+  
   useEffect(() => {
     fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants")
       .then((res) => {
@@ -20,10 +20,10 @@ function PlantList() {
       })
       .then((data) => {
         if (Array.isArray(data)) {
-          // Ensure every plant has a valid image, or provide a default
+        
           const updatedPlants = data.map((plant) => ({
             ...plant,
-            image: plant.image || "https://via.placeholder.com/150", // Default image
+            image: plant.image || "https://via.placeholder.com/150",
           }));
           setPlants(updatedPlants);  // Update state with fetched data
         } else {
@@ -38,6 +38,7 @@ function PlantList() {
         setPlants([]);
       });
   }, []);
+  
 
   // Handle adding a new plant
   const handleAddPlant = (e) => {
