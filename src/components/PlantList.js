@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import PlantCard from "./PlantCard";
 
 function PlantList() {
-  const [plants, setPlants] = useState([]); // Ensure plants is always an array
+  const [plants, setPlants] = useState([]); // Store the plant list
   const [newPlant, setNewPlant] = useState({ name: "", price: "", image: "" });
   const [updatedPlant, setUpdatedPlant] = useState({ id: null, name: "", price: "" });
   const [searchTerm, setSearchTerm] = useState(""); 
-  const [isLoading, setIsLoading] = useState(true);  // For loading state
-  const [error, setError] = useState(null);  // For error handling
+  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
 
-  // Fetch the plants data when the component mounts
+  // Fetch plants data from the API
   useEffect(() => {
     fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants")
       .then((res) => {
@@ -19,27 +19,30 @@ function PlantList() {
         return res.json();
       })
       .then((data) => {
-        // Ensure the data is an array
         if (Array.isArray(data)) {
-          setPlants(data);
+          // Ensure every plant has a valid image, or provide a default
+          const updatedPlants = data.map((plant) => ({
+            ...plant,
+            image: plant.image || "https://via.placeholder.com/150", // Default image
+          }));
+          setPlants(updatedPlants);  // Update state with fetched data
         } else {
           console.error("Fetched data is not an array:", data);
-          setPlants([]); // If not an array, set plants to an empty array
+          setPlants([]);
         }
-        setIsLoading(false);  // Stop loading once the data is fetched
+        setIsLoading(false); // Stop loading
       })
       .catch((err) => {
-        setError(err.message);  // Set error message to display
+        setError(err.message);
         setIsLoading(false);
-        setPlants([]); // Set to empty array in case of error
+        setPlants([]);
       });
   }, []);
 
-  // Add a new plant with validation
+  // Handle adding a new plant
   const handleAddPlant = (e) => {
     e.preventDefault();
 
-    // Input validation
     if (!newPlant.name || !newPlant.price) {
       alert("Name and Price are required.");
       return;
@@ -50,10 +53,9 @@ function PlantList() {
       return;
     }
 
-    // Ensure image URL is set, default to placeholder if not provided
     const plantWithImage = {
       ...newPlant,
-      image: newPlant.image || "https://via.placeholder.com/150", // Default image if not provided
+      image: newPlant.image || "https://via.placeholder.com/150", // Default image if none provided
     };
 
     fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants", {
@@ -63,16 +65,15 @@ function PlantList() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setPlants((prev) => [...prev, data]); // Add the new plant to the state
-        setNewPlant({ name: "", price: "", image: "" }); // Reset the form after submission
+        setPlants((prev) => [...prev, data]); // Add new plant to state
+        setNewPlant({ name: "", price: "", image: "" }); // Reset form
       })
       .catch((err) => {
         setError("Error adding plant: " + err.message);
-        console.error("Error adding plant:", err);
       });
   };
 
-  // Update plant details
+  // Handle updating plant details
   const handleUpdatePlant = (id) => {
     if (!updatedPlant.name || !updatedPlant.price) {
       alert("Please fill out all fields to update the plant.");
@@ -87,23 +88,41 @@ function PlantList() {
       .then((res) => res.json())
       .then((data) => {
         setPlants((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, ...data } : p))
-        );
-        setUpdatedPlant({ id: null, name: "", price: "" });  // Clear the update form
+          prev.map((plant) =>
+            plant.id === id ? { ...plant, ...data } : plant
+          )
+        );  // Update the plant in the state
+        setUpdatedPlant({ id: null, name: "", price: "" });  // Reset update form
       })
-      .catch(console.error);
+      .catch((err) => {
+        setError("Error updating plant: " + err.message);
+      });
   };
 
-  // Delete a plant
+  // Handle deleting a plant
   const handleDeletePlant = (id) => {
     fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, {
       method: "DELETE",
     })
-      .then(() => setPlants((prev) => prev.filter((p) => p.id !== id))) // Remove from local state
-      .catch(console.error); 
+      .then(() => {
+        setPlants((prev) => prev.filter((plant) => plant.id !== id)); // Remove deleted plant from state
+      })
+      .catch((err) => {
+        setError("Error deleting plant: " + err.message);
+      });
   };
 
-  // Mark plant as sold
+  // Handle searching for plants by name
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value); // Update the search term on input change
+  };
+
+  // Filter the plants based on the search term
+  const filteredPlants = plants.filter((plant) =>
+    plant.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Mark a plant as sold
   const handleMarkAsSold = (id) => {
     fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, {
       method: "PATCH",
@@ -113,23 +132,15 @@ function PlantList() {
       .then((res) => res.json())
       .then(() => {
         setPlants((prev) =>
-          prev.map((plant) => (plant.id === id ? { ...plant, sold: true } : plant))
+          prev.map((plant) =>
+            plant.id === id ? { ...plant, sold: true } : plant
+          )
         );
       })
-      .catch(console.error); 
+      .catch((err) => {
+        setError("Error marking plant as sold: " + err.message);
+      });
   };
-
-  // Handle search term input
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Filter plants by search term
-  const filteredPlants = Array.isArray(plants) 
-    ? plants.filter((plant) =>
-        plant.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
 
   return (
     <div className="plant-list">
@@ -166,7 +177,7 @@ function PlantList() {
           type="text"
           placeholder="Search Plants"
           value={searchTerm}
-          onChange={handleSearchChange}
+          onChange={handleSearchChange} // Trigger search filter
         />
       </div>
 
