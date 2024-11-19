@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A plant shop built with React and Hooks",
   "main": "src/index.js",
-  "homepage": "https://fay-ui.github.io/react-hooks-cc-plantshop",
+  "homepage": ".", 
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
