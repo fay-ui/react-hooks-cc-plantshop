@@ -1,17 +1,16 @@
 const jsonServer = require('json-server');
-const path = require('path');
-const express = require('express'); // Import express
+const express = require('express');
 const cors = require('cors'); // Import CORS for cross-origin requests
+const path = require('path');
 
 const server = jsonServer.create();
 const router = jsonServer.router('db.json'); // Reference to the JSON database
 const middlewares = jsonServer.defaults(); // Use default middlewares
 
-// Enable CORS for your frontend (Replace with the URL of your frontend)
+// Enable CORS for all routes and methods (including PATCH)
 server.use(cors({
-  origin: 'https://fay-ui.github.io', // This allows requests from your frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers (if necessary)
+  origin: '*', // Allows requests from all origins, you can limit it to a specific domain for more security
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], // Allow all HTTP methods
 }));
 
 // Serve static files (like images) from the "public" folder using Express
@@ -24,6 +23,7 @@ server.use(middlewares);
 server.use(router);
 
 // Start the server on port 6001 (or the port specified in the environment variable)
-server.listen(process.env.PORT || 6001, () => {
-  console.log('JSON Server is running on port 6001');
+server.listen(process.env.PORT || 6002, () => {
+  console.log('JSON Server is running');
 });
+

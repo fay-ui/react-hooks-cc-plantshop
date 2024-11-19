@@ -9,7 +9,7 @@ function PlantList() {
   const [isLoading, setIsLoading] = useState(true); 
   const [error, setError] = useState(null); 
 
-  
+  // Fetch plants from the backend on component mount
   useEffect(() => {
     fetch("https://react-hooks-cc-plantshop-gbhg.onrender.com/plants")
       .then((res) => {
@@ -20,10 +20,9 @@ function PlantList() {
       })
       .then((data) => {
         if (Array.isArray(data)) {
-        
           const updatedPlants = data.map((plant) => ({
             ...plant,
-            image: plant.image || "https://via.placeholder.com/150",
+            image: plant.image || "https://via.placeholder.com/150", // Fallback image
           }));
           setPlants(updatedPlants);  // Update state with fetched data
         } else {
@@ -38,7 +37,6 @@ function PlantList() {
         setPlants([]);
       });
   }, []);
-  
 
   // Handle adding a new plant
   const handleAddPlant = (e) => {
@@ -123,18 +121,19 @@ function PlantList() {
     plant.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Mark a plant as sold
+  // **handleMarkAsSold** function
   const handleMarkAsSold = (id) => {
     fetch(`https://react-hooks-cc-plantshop-gbhg.onrender.com/plants/${id}`, {
-      method: "PATCH",
+      method: "PATCH", // Using PATCH method to update a specific plant
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sold: true }),
+      body: JSON.stringify({ sold: true }), // Mark the plant as sold
     })
       .then((res) => res.json())
-      .then(() => {
+      .then((updatedPlant) => {
+        // Update the plant in the state to reflect the sold status
         setPlants((prev) =>
           prev.map((plant) =>
-            plant.id === id ? { ...plant, sold: true } : plant
+            plant.id === id ? { ...plant, sold: updatedPlant.sold } : plant
           )
         );
       })
